@@ -83,7 +83,7 @@ async def call_openai(prompt, semaphore, max_retries=8):
     async with semaphore:
         for attempt in range(max_retries):
             try:
-                response = await get_openai_client().chat.completions.create(
+                response = await asyncio.wait_for(get_openai_client().chat.completions.create(
                     model=prompt["model"],
                     messages=[
                         {"role": "system", "content": prompt["system"]},
@@ -91,8 +91,12 @@ async def call_openai(prompt, semaphore, max_retries=8):
                     ],
                     temperature=prompt["temperature"],
                     max_completion_tokens=50,
-                )
+                ), timeout=30)
                 return response.choices[0].message.content
+            except asyncio.TimeoutError:
+                if attempt == max_retries - 1:
+                    return "ERROR: timeout"
+                await asyncio.sleep(2)
             except openai.RateLimitError:
                 await asyncio.sleep(min(2 ** attempt, 10))
             except Exception as e:
@@ -106,7 +110,7 @@ async def call_anthropic(prompt, semaphore, max_retries=8):
     async with semaphore:
         for attempt in range(max_retries):
             try:
-                response = await get_anthropic_client().messages.create(
+                response = await asyncio.wait_for(get_anthropic_client().messages.create(
                     model=prompt["model"],
                     system=prompt["system"],
                     messages=[
@@ -114,8 +118,12 @@ async def call_anthropic(prompt, semaphore, max_retries=8):
                     ],
                     temperature=prompt["temperature"],
                     max_tokens=10,
-                )
+                ), timeout=30)
                 return response.content[0].text
+            except asyncio.TimeoutError:
+                if attempt == max_retries - 1:
+                    return "ERROR: timeout"
+                await asyncio.sleep(2)
             except anthropic.RateLimitError:
                 await asyncio.sleep(min(2 ** attempt, 10))
             except Exception as e:
@@ -129,7 +137,7 @@ async def call_gemini(prompt, semaphore, max_retries=8):
     async with semaphore:
         for attempt in range(max_retries):
             try:
-                response = await get_gemini_client().chat.completions.create(
+                response = await asyncio.wait_for(get_gemini_client().chat.completions.create(
                     model=prompt["model"],
                     messages=[
                         {"role": "system", "content": prompt["system"]},
@@ -137,7 +145,7 @@ async def call_gemini(prompt, semaphore, max_retries=8):
                     ],
                     temperature=prompt["temperature"],
                     max_completion_tokens=50,
-                )
+                ), timeout=30)
                 content = response.choices[0].message.content
                 if content is None:
                     if attempt < max_retries - 1:
@@ -145,6 +153,10 @@ async def call_gemini(prompt, semaphore, max_retries=8):
                         continue
                     return "ERROR: empty response"
                 return content
+            except asyncio.TimeoutError:
+                if attempt == max_retries - 1:
+                    return "ERROR: timeout"
+                await asyncio.sleep(2)
             except openai.RateLimitError:
                 await asyncio.sleep(min(2 ** attempt, 10))
             except Exception as e:
@@ -159,7 +171,7 @@ async def call_openrouter(prompt, semaphore, max_retries=8):
         api_model = OPENROUTER_MODELS.get(prompt["model"], prompt["model"])
         for attempt in range(max_retries):
             try:
-                response = await get_openrouter_client().chat.completions.create(
+                response = await asyncio.wait_for(get_openrouter_client().chat.completions.create(
                     model=api_model,
                     messages=[
                         {"role": "system", "content": prompt["system"]},
@@ -167,7 +179,7 @@ async def call_openrouter(prompt, semaphore, max_retries=8):
                     ],
                     temperature=prompt["temperature"],
                     max_tokens=10,
-                )
+                ), timeout=30)
                 content = response.choices[0].message.content
                 if content is None:
                     if attempt < max_retries - 1:
@@ -175,6 +187,10 @@ async def call_openrouter(prompt, semaphore, max_retries=8):
                         continue
                     return "ERROR: empty response"
                 return content
+            except asyncio.TimeoutError:
+                if attempt == max_retries - 1:
+                    return "ERROR: timeout"
+                await asyncio.sleep(2)
             except openai.RateLimitError:
                 await asyncio.sleep(min(2 ** attempt, 10))
             except Exception as e:
