@@ -15,6 +15,12 @@ load_dotenv()
 _openai_client = None
 _anthropic_client = None
 _gemini_client = None
+_openrouter_client = None
+
+OPENROUTER_MODELS = {
+    "llama-3.1-8b": "meta-llama/llama-3.1-8b-instruct",
+    "mistral-7b": "mistralai/mistral-7b-instruct",
+}
 
 
 def get_openai_client():
@@ -39,6 +45,18 @@ def get_gemini_client():
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         )
     return _gemini_client
+
+
+def get_openrouter_client():
+    global _openrouter_client
+    if _openrouter_client is None:
+        base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+        api_key = os.environ.get("OPENROUTER_API_KEY", "")
+        _openrouter_client = openai.AsyncOpenAI(
+            api_key=api_key,
+            base_url=base_url,
+        )
+    return _openrouter_client
 
 LETTER_MAP = {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5}
 RESULTS_DIR = Path("results")
@@ -76,11 +94,11 @@ async def call_openai(prompt, semaphore, max_retries=8):
                 )
                 return response.choices[0].message.content
             except openai.RateLimitError:
-                await asyncio.sleep(2 ** attempt + 1)
+                await asyncio.sleep(min(2 ** attempt, 10))
             except Exception as e:
                 if attempt == max_retries - 1:
                     return f"ERROR: {e}"
-                await asyncio.sleep(2)
+                await asyncio.sleep(1)
         return "ERROR: max retries exceeded"
 
 
@@ -99,11 +117,11 @@ async def call_anthropic(prompt, semaphore, max_retries=8):
                 )
                 return response.content[0].text
             except anthropic.RateLimitError:
-                await asyncio.sleep(2 ** attempt + 1)
+                await asyncio.sleep(min(2 ** attempt, 10))
             except Exception as e:
                 if attempt == max_retries - 1:
                     return f"ERROR: {e}"
-                await asyncio.sleep(2)
+                await asyncio.sleep(1)
         return "ERROR: max retries exceeded"
 
 
@@ -128,7 +146,37 @@ async def call_gemini(prompt, semaphore, max_retries=8):
                     return "ERROR: empty response"
                 return content
             except openai.RateLimitError:
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(min(2 ** attempt, 10))
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    return f"ERROR: {e}"
+                await asyncio.sleep(1)
+        return "ERROR: max retries exceeded"
+
+
+async def call_openrouter(prompt, semaphore, max_retries=8):
+    async with semaphore:
+        api_model = OPENROUTER_MODELS.get(prompt["model"], prompt["model"])
+        for attempt in range(max_retries):
+            try:
+                response = await get_openrouter_client().chat.completions.create(
+                    model=api_model,
+                    messages=[
+                        {"role": "system", "content": prompt["system"]},
+                        {"role": "user", "content": prompt["user"]},
+                    ],
+                    temperature=prompt["temperature"],
+                    max_tokens=10,
+                )
+                content = response.choices[0].message.content
+                if content is None:
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(2)
+                        continue
+                    return "ERROR: empty response"
+                return content
+            except openai.RateLimitError:
+                await asyncio.sleep(min(2 ** attempt, 10))
             except Exception as e:
                 if attempt == max_retries - 1:
                     return f"ERROR: {e}"
@@ -141,19 +189,22 @@ MODEL_ROUTES = {
     "gpt-5.4": "openai",
     "claude-sonnet-4-6": "anthropic",
     "gemini-2.5-flash": "gemini",
+    "llama-3.1-8b": "openrouter",
+    "mistral-7b": "openrouter",
 }
 
 DISPATCH = {
     "openai": call_openai,
     "anthropic": call_anthropic,
     "gemini": call_gemini,
+    "openrouter": call_openrouter,
 }
 
 
 async def call_model(prompt, semaphore):
     route = MODEL_ROUTES.get(prompt["model"])
     if route is None:
-        for prefix, r in [("gpt", "openai"), ("claude", "anthropic"), ("gemini", "gemini")]:
+        for prefix, r in [("gpt", "openai"), ("claude", "anthropic"), ("gemini", "gemini"), ("llama", "openrouter"), ("mistral", "openrouter")]:
             if prompt["model"].startswith(prefix):
                 route = r
                 break

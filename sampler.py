@@ -1,6 +1,19 @@
 import numpy as np
 from scipy.stats.qmc import LatinHypercube
+from SALib.sample import saltelli as saltelli_sampler
 from config import DIMENSIONS, DIMENSION_ORDER
+
+
+def _discretize(continuous_samples, dim_order, dim_levels):
+    specifications = []
+    for i, row in enumerate(continuous_samples):
+        spec = {"spec_id": i}
+        for j, dim_name in enumerate(dim_order):
+            levels = dim_levels[dim_name]
+            idx = int(np.clip(np.floor(row[j]), 0, len(levels) - 1))
+            spec[dim_name] = levels[idx]
+        specifications.append(spec)
+    return specifications
 
 
 def generate_specifications(n_samples, seed=42):
@@ -18,3 +31,23 @@ def generate_specifications(n_samples, seed=42):
         specifications.append(spec)
 
     return specifications
+
+
+def get_saltelli_problem():
+    return {
+        "num_vars": len(DIMENSION_ORDER),
+        "names": list(DIMENSION_ORDER),
+        "bounds": [[0, len(DIMENSIONS[d])] for d in DIMENSION_ORDER],
+    }
+
+
+def generate_saltelli_specifications(n_base=512, calc_second_order=False, seed=42):
+    problem = get_saltelli_problem()
+    np.random.seed(seed)
+    param_values = saltelli_sampler.sample(
+        problem, n_base,
+        calc_second_order=calc_second_order,
+    )
+    total = len(param_values)
+    specs = _discretize(param_values, DIMENSION_ORDER, DIMENSIONS)
+    return specs, problem, total
