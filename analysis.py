@@ -373,9 +373,9 @@ def anes_benchmark(df, anes_path=None):
 
     PARTY_VAR = "V241227x"
     ITEM_MAP = {
-        "gov_spending": {"var": "V241239", "scale": 7, "valid_range": (1, 7)},
-        "immigration": {"var": "V241747", "scale": 5, "valid_range": (1, 5)},
-        "gun_control": {"var": "V242325", "scale": 3, "valid_range": (1, 3)},
+        "gov_spending": {"var": "V241239", "scale": 7, "valid_range": (1, 7), "flip": False},
+        "immigration": {"var": "V241747", "scale": 5, "valid_range": (1, 5), "flip": True},
+        "gun_control": {"var": "V242325", "scale": 3, "valid_range": (1, 3), "flip": True},
     }
 
     anes_party = anes[PARTY_VAR]
@@ -394,6 +394,9 @@ def anes_benchmark(df, anes_path=None):
         valid = anes[anes[var].between(lo, hi)].copy()
         if len(valid) == 0:
             continue
+
+        if info.get("flip"):
+            valid[var] = (lo + hi) - valid[var]
 
         anes_gap = (
             valid[valid["party_simple"] == "Democrat"][var].mean()
