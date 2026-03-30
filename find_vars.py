@@ -27,4 +27,4 @@ if immig_matches:
     for c in immig_matches:
         print(f"  - {c}")
 else:
-    print("  No obvious matches found. You
+    print("  No obvious matches found. You may need to check the codebook.")
