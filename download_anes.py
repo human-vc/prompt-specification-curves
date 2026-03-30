@@ -6,10 +6,10 @@ DATA_DIR = Path("data")
 EXPECTED_PATTERN = "anes_timeseries_2024*"
 OUTPUT_NAME = "anes_timeseries_2024.csv"
 
-PARTY_VAR = "V241227"
+PARTY_VAR = "V241227x"
 ITEM_VARS = {
     "gov_spending": "V241239",
-    "immigration": "V241747SPS",
+    "immigration": "V241747",
     "gun_control": "V242325",
 }
 

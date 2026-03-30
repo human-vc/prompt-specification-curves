@@ -371,11 +371,11 @@ def anes_benchmark(df, anes_path=None):
     FIGURES_DIR.mkdir(exist_ok=True)
     anes = pd.read_csv(anes_path, low_memory=False)
 
-    PARTY_VAR = "V241227"
+    PARTY_VAR = "V241227x"
     ITEM_MAP = {
-        "gov_spending": {"var": "V241239", "scale": 7},
-        "immigration": {"var": "V241747SPS", "scale": 5},
-        "gun_control": {"var": "V242325", "scale": 5},
+        "gov_spending": {"var": "V241239", "scale": 7, "valid_range": (1, 7)},
+        "immigration": {"var": "V241747", "scale": 5, "valid_range": (1, 5)},
+        "gun_control": {"var": "V242325", "scale": 3, "valid_range": (1, 3)},
     }
 
     anes_party = anes[PARTY_VAR]
@@ -390,8 +390,8 @@ def anes_benchmark(df, anes_path=None):
         var = info["var"]
         if var not in anes.columns:
             continue
-        col = anes[var]
-        valid = anes[col > 0].copy()
+        lo, hi = info["valid_range"]
+        valid = anes[anes[var].between(lo, hi)].copy()
         if len(valid) == 0:
             continue
 
