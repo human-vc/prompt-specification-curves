@@ -170,6 +170,10 @@ async def main():
 
     flip = sub.add_parser("flipped", parents=[shared], help="Analyze flipped specifications")
 
+    sob = sub.add_parser("sobol", parents=[shared], help="Run Sobol analysis on existing Saltelli results")
+    sob.add_argument("--saltelli_n", type=int, default=256)
+    sob.add_argument("--second_order", action="store_true")
+
     ci = sub.add_parser("bootstrap", parents=[shared], help="Bootstrap CIs on eta-squared")
     ci.add_argument("--n_boot", type=int, default=5000)
 
@@ -193,6 +197,11 @@ async def main():
         await run_permutation(args)
     elif args.command == "flipped":
         await run_flipped(args)
+    elif args.command == "sobol":
+        from sampler import get_saltelli_problem
+        df = load_results(args.output)
+        problem = get_saltelli_problem()
+        sobol_analysis(df, problem, args.saltelli_n, calc_second_order=args.second_order)
     elif args.command == "bootstrap":
         df = load_results(args.output)
         bootstrap_ci(df, n_boot=args.n_boot, seed=args.seed)
