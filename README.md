@@ -4,7 +4,7 @@ A specification curve analysis framework for evaluating the robustness of LLM-si
 
 ## What it does
 
-P-SCA systematically varies six prompt dimensions — **model**, **persona format**, **question framing**, **system prompt**, **temperature**, and **few-shot examples** — to measure how sensitive LLM partisan gap estimates are to arbitrary researcher decisions. We benchmark against ANES 2024 ground-truth survey data.
+P-SCA systematically varies six prompt dimensions, **model**, **persona format**, **question framing**, **system prompt**, **temperature**, and **few-shot examples**, to measure how sensitive LLM partisan gap estimates are to arbitrary researcher decisions. We benchmark against ANES 2024 ground-truth survey data.
 
 ## Models
 
