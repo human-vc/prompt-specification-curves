@@ -8,7 +8,7 @@ P-SCA systematically varies six prompt dimensions, **model**, **persona format**
 
 ## Models
 
-GPT-5.4, GPT-5.4-nano, Claude Sonnet 4.6, Gemini 2.5 Flash, Llama 3.3 70B, Mistral Small
+GPT-5.4, GPT-5.4-nano, Claude Sonnet 4.6, Claude Haiku 4.5, Llama 3.3 70B, Mistral Small
 
 ## Setup
 

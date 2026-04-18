@@ -167,7 +167,7 @@ async def main():
     shared.add_argument("--dry_run", action="store_true")
     shared.add_argument("--output", default="pilot_results.json")
     shared.add_argument("--exclude_models", nargs="+", default=None,
-                        help="Model identifiers to exclude from analysis (e.g. gemini-2.5-flash)")
+                        help="Model identifiers to exclude from analysis")
 
     lhs = sub.add_parser("lhs", parents=[shared], help="LHS sampling run")
     lhs.add_argument("--n_specs", type=int, default=100)

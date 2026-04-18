@@ -14,7 +14,6 @@ load_dotenv()
 
 _openai_client = None
 _anthropic_client = None
-_gemini_client = None
 _openrouter_client = None
 
 OPENROUTER_MODELS = {
@@ -35,16 +34,6 @@ def get_anthropic_client():
     if _anthropic_client is None:
         _anthropic_client = anthropic.AsyncAnthropic()
     return _anthropic_client
-
-
-def get_gemini_client():
-    global _gemini_client
-    if _gemini_client is None:
-        _gemini_client = openai.AsyncOpenAI(
-            api_key=os.environ["GEMINI_API_KEY"],
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        )
-    return _gemini_client
 
 
 def get_openrouter_client():
@@ -135,39 +124,6 @@ async def call_anthropic(prompt, semaphore, max_retries=8):
         return "ERROR: max retries exceeded"
 
 
-async def call_gemini(prompt, semaphore, max_retries=8):
-    async with semaphore:
-        for attempt in range(max_retries):
-            try:
-                response = await asyncio.wait_for(get_gemini_client().chat.completions.create(
-                    model=prompt["model"],
-                    messages=[
-                        {"role": "system", "content": prompt["system"]},
-                        {"role": "user", "content": prompt["user"]},
-                    ],
-                    temperature=prompt["temperature"],
-                    max_completion_tokens=50,
-                ), timeout=30)
-                content = response.choices[0].message.content
-                if content is None:
-                    if attempt < max_retries - 1:
-                        await asyncio.sleep(2)
-                        continue
-                    return "ERROR: empty response"
-                return content
-            except asyncio.TimeoutError:
-                if attempt == max_retries - 1:
-                    return "ERROR: timeout"
-                await asyncio.sleep(2)
-            except openai.RateLimitError:
-                await asyncio.sleep(min(2 ** attempt, 10))
-            except Exception as e:
-                if attempt == max_retries - 1:
-                    return f"ERROR: {e}"
-                await asyncio.sleep(1)
-        return "ERROR: max retries exceeded"
-
-
 async def call_openrouter(prompt, semaphore, max_retries=8):
     async with semaphore:
         api_model = OPENROUTER_MODELS.get(prompt["model"], prompt["model"])
@@ -207,7 +163,6 @@ MODEL_ROUTES = {
     "gpt-5.4": "openai",
     "claude-sonnet-4-6": "anthropic",
     "claude-haiku-4-5": "anthropic",
-    "gemini-2.5-flash": "gemini",
     "llama-3.3-70b": "openrouter",
     "mistral-small": "openrouter",
 }
@@ -215,7 +170,6 @@ MODEL_ROUTES = {
 DISPATCH = {
     "openai": call_openai,
     "anthropic": call_anthropic,
-    "gemini": call_gemini,
     "openrouter": call_openrouter,
 }
 
@@ -223,7 +177,6 @@ DISPATCH = {
 PROVIDER_CONCURRENCY = {
     "openai": 30,
     "anthropic": 5,
-    "gemini": 12,
     "openrouter": 20,
 }
 
@@ -231,7 +184,7 @@ PROVIDER_CONCURRENCY = {
 def _get_route(model):
     route = MODEL_ROUTES.get(model)
     if route is None:
-        for prefix, r in [("gpt", "openai"), ("claude", "anthropic"), ("gemini", "gemini"), ("llama", "openrouter"), ("mistral", "openrouter")]:
+        for prefix, r in [("gpt", "openai"), ("claude", "anthropic"), ("llama", "openrouter"), ("mistral", "openrouter")]:
             if model.startswith(prefix):
                 route = r
                 break

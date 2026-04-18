@@ -20,7 +20,7 @@ plt.rcParams.update({
     "savefig.dpi": 300, "savefig.bbox": "tight",
 })
 
-MODELS = ["gpt-5.4-nano", "gpt-5.4", "claude-sonnet-4-6", "gemini-2.5-flash", "llama-3.3-70b", "mistral-small"]
+MODELS = ["gpt-5.4-nano", "gpt-5.4", "claude-sonnet-4-6", "claude-haiku-4-5", "llama-3.3-70b", "mistral-small"]
 ITEM = "gun_control"
 ORDERINGS = ["standard", "reversed", "shuffled_1", "shuffled_2", "shuffled_3"]
 REPEATS = 3

@@ -18,7 +18,6 @@ SYSTEM_HIERARCHY = {
     "claude-haiku-4-5":   {"provider": "anthropic",  "family": "claude-4",  "size": "small", "access": "proprietary"},
     "llama-3.3-70b":      {"provider": "meta",       "family": "llama-3.3", "size": "large", "access": "open_weight"},
     "mistral-small":      {"provider": "mistralai",  "family": "mistral-3", "size": "small", "access": "open_weight"},
-    "gemini-2.5-flash":   {"provider": "google",     "family": "gemini-2.5","size": "small", "access": "proprietary"},
 }
 
 DIMENSION_ORDER = [
@@ -255,7 +254,6 @@ COST_PER_1M_INPUT = {
     "gpt-5.4": 2.50,
     "claude-sonnet-4-6": 3.00,
     "claude-haiku-4-5": 1.00,
-    "gemini-2.5-flash": 0.30,
     "llama-3.3-70b": 0.39,
     "mistral-small": 0.10,
 }
@@ -265,7 +263,6 @@ COST_PER_1M_OUTPUT = {
     "gpt-5.4": 15.00,
     "claude-sonnet-4-6": 15.00,
     "claude-haiku-4-5": 5.00,
-    "gemini-2.5-flash": 2.50,
     "llama-3.3-70b": 0.39,
     "mistral-small": 0.40,
 }
