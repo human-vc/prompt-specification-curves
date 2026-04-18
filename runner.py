@@ -63,8 +63,6 @@ RESULTS_DIR = Path("results")
 
 
 def parse_response(text, question_framing, scale_max=5):
-    """Parse a model response. scale_max is the upper bound of the item's
-    native scale (5 for the original three items, 7 for the v2 battery)."""
     if text is None:
         return None
     text = text.strip().lower()

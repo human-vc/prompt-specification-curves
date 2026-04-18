@@ -453,21 +453,10 @@ def anes_benchmark(df, anes_path=None):
     anes = pd.read_csv(anes_path, low_memory=False)
 
     PARTY_VAR = "V241227x"
-    # flip=True means we reverse the native scale so that "Democrat side"
-    # always maps to the high end (consistent with the 1-5 standardized
-    # output scale used by the LLM pipeline).
     ITEM_MAP = {
         "gov_spending":         {"var": "V241239", "scale": 7, "valid_range": (1, 7), "flip": False},
         "immigration":          {"var": "V241747", "scale": 5, "valid_range": (1, 5), "flip": True},
         "gun_control":          {"var": "V242325", "scale": 3, "valid_range": (1, 3), "flip": True},
-        # v2 expansion: 7-point self-placement battery
-        # Direction conventions in ANES native coding:
-        #   defense_spending:    1=decrease, 7=increase  -> Republicans higher, no flip
-        #   healthcare:          1=gov plan, 7=private   -> Democrats lower, FLIP for D-on-high
-        #   abortion:            1=always permitted, 7=never -> Democrats lower, FLIP
-        #   guaranteed_jobs:     1=gov sees to it, 7=on own -> Democrats lower, FLIP
-        #   aid_to_blacks:       1=gov helps, 7=on own   -> Democrats lower, FLIP
-        #   environment_business:1=tougher regs, 7=less  -> Democrats lower, FLIP
         "defense_spending":     {"var": "V241242", "scale": 7, "valid_range": (1, 7), "flip": True},
         "healthcare":           {"var": "V241245", "scale": 7, "valid_range": (1, 7), "flip": True},
         "abortion":             {"var": "V241248", "scale": 7, "valid_range": (1, 7), "flip": True},
@@ -563,11 +552,6 @@ def summary_stats(df):
 
 
 def fisher_rz_dimension_test(df):
-    """
-    Fisher r-to-z test comparing the two largest eta-squared dimensions
-    on each item. Treats eta = sqrt(eta^2) as a correlation coefficient
-    and uses the number of specifications as the effective sample size.
-    """
     results = {}
     for item in df["item"].unique():
         item_df = df[df["item"] == item]
@@ -605,14 +589,6 @@ def fisher_rz_dimension_test(df):
 
 
 def derive_coverage_threshold(df, n_permutations=10000, seed=42):
-    """
-    Derive an empirical coverage threshold under the permutation null.
-    For each item, computes the null distribution of "% of specifications
-    with positive partisan gap" across n_permutations of party-label shuffles,
-    then reports the 95th, 99th, and max of the null coverage distribution.
-    A finding with observed coverage >= the 95th percentile of null coverage
-    is significant at alpha = 0.05.
-    """
     rng = np.random.default_rng(seed)
     results = {}
     for item in df["item"].unique():
@@ -665,12 +641,6 @@ def derive_coverage_threshold(df, n_permutations=10000, seed=42):
 
 
 def profile_jackknife(df, anes_path=None):
-    """
-    Leave-one-profile-out jackknife on the median partisan gap and on the
-    ANES amplification ratio. Reports the SE of each from the jackknife
-    distribution, addressing the concern that 20 profiles is a small sample
-    for benchmarking.
-    """
     profiles = sorted(df["profile_id"].unique())
     results = {}
 
@@ -715,23 +685,6 @@ def profile_jackknife(df, anes_path=None):
 
 
 def hierarchical_system_decomp(df):
-    """
-    Hierarchical decomposition of the deployed-system dimension's
-    eta-squared into nested levels of the SYSTEM_HIERARCHY tree:
-
-        access_type  (open_weight vs proprietary)
-            -> provider      (anthropic, openai, meta, mistralai)
-                -> family    (claude-4, gpt-5.4, llama-3.3, mistral-3)
-                    -> size  (large vs small within family)
-
-    Each level partitions the systems differently. By computing eta^2
-    on each grouping variable (across the SAME response data), we can
-    quantify how much of the system effect lives at each hierarchical
-    level. This requires within-family and within-provider size pairs
-    in the deployed-system set (Claude Sonnet vs Claude Haiku, GPT-5.4
-    vs GPT-5.4-nano, etc.), which is the v2 motivation for adding
-    Claude Haiku 4.5 alongside the existing five systems.
-    """
     from config import SYSTEM_HIERARCHY
 
     df = df.copy()
@@ -755,7 +708,6 @@ def hierarchical_system_decomp(df):
                 ss_between += len(sub) * (sub["score"].mean() - grand) ** 2
             eta[level] = ss_between / ss_total
 
-        # Nested decomposition (each entry strictly subtracts)
         eta_within_access  = eta["provider"] - eta["access"]
         eta_within_provider = eta["family"] - eta["provider"]
         eta_within_family   = eta["model"]  - eta["family"]
@@ -777,16 +729,6 @@ def hierarchical_system_decomp(df):
 
 
 def system_decomposition(df):
-    """
-    Partial decomposition of the deployed-system dimension's eta-squared.
-    For each item:
-      (1) Jackknife: eta-squared on the system dimension when each system
-          is dropped in turn. Identifies whether any single system drives
-          the result.
-      (2) Open-vs-proprietary: split between-system variance into
-          within-group (open weights: Llama, Mistral; proprietary: GPT*,
-          Claude) and between-group components.
-    """
     open_weight = {"llama-3.3-70b", "mistral-small"}
     proprietary = {"gpt-5.4", "gpt-5.4-nano", "claude-sonnet-4-6"}
 
@@ -800,7 +742,6 @@ def system_decomposition(df):
             sub = item_df[item_df["model"] != sys]
             jackknife[sys] = _compute_eta_sq(sub)["model"]
 
-        # Two-level decomposition
         groups = {"open_weight": [], "proprietary": []}
         for sys in item_df["model"].unique():
             if sys in open_weight:
@@ -812,7 +753,6 @@ def system_decomposition(df):
         ss_total = float(((scores - scores.mean()) ** 2).sum())
         grand_mean = scores.mean()
 
-        # Between-group SS
         ss_between_groups = 0.0
         ss_within_groups = 0.0
         for group_systems in groups.values():

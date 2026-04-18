@@ -270,7 +270,6 @@ async def main():
 
 
 def run_analysis_df(df):
-    """run_analysis but on a pre-filtered dataframe."""
     from analysis import summary_stats, compute_partisan_gaps, specification_curve, variance_decomposition
     print(f"Total responses: {len(df)}")
     stats = summary_stats(df)

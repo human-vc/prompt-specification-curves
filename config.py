@@ -1,10 +1,7 @@
 DIMENSIONS = {
     "model": [
-        # Proprietary, large
         "gpt-5.4", "claude-sonnet-4-6",
-        # Proprietary, small (within-family size pairs with the large entries above)
         "gpt-5.4-nano", "claude-haiku-4-5",
-        # Open weight
         "llama-3.3-70b", "mistral-small",
     ],
     "persona_format": ["bare", "narrative", "third_person", "survey"],
@@ -14,10 +11,6 @@ DIMENSIONS = {
     "few_shot": [0, 1, 3],
 }
 
-# Hierarchical structure for the "deployed system" dimension. Used by
-# analysis.hierarchical_system_decomp to break system-level eta-squared
-# into provider-level, family-level, and access-type components without
-# the open-vs-proprietary confound that the flat decomposition aggregates.
 SYSTEM_HIERARCHY = {
     "gpt-5.4":            {"provider": "openai",     "family": "gpt-5.4",   "size": "large", "access": "proprietary"},
     "gpt-5.4-nano":       {"provider": "openai",     "family": "gpt-5.4",   "size": "small", "access": "proprietary"},
@@ -25,7 +18,6 @@ SYSTEM_HIERARCHY = {
     "claude-haiku-4-5":   {"provider": "anthropic",  "family": "claude-4",  "size": "small", "access": "proprietary"},
     "llama-3.3-70b":      {"provider": "meta",       "family": "llama-3.3", "size": "large", "access": "open_weight"},
     "mistral-small":      {"provider": "mistralai",  "family": "mistral-3", "size": "small", "access": "open_weight"},
-    # Excluded from primary analyses but kept here for transparency
     "gemini-2.5-flash":   {"provider": "google",     "family": "gemini-2.5","size": "small", "access": "proprietary"},
 }
 
@@ -104,7 +96,6 @@ ANES_ITEMS = {
         "expected_gap": "Democrat > Republican",
         "domain": "cultural",
     },
-    # === New 7-point ANES policy battery items, added for the v2 multiverse ===
     "defense_spending": {
         "text": "Some people believe that we should spend much less money for defense. Others feel that defense spending should be greatly increased. Where would you place yourself on this scale?",
         "scale": {

@@ -17,15 +17,6 @@ def _discretize(continuous_samples, dim_order, dim_levels):
 
 
 def generate_specifications(n_samples, seed=42, only_models=None, spec_id_offset=0):
-    """Generate LHS specifications.
-
-    only_models: optional list of model identifiers to restrict the model
-                 dimension to. Used by the v2 incremental runs (e.g. add
-                 Claude Haiku to the existing 3-item dataset without
-                 re-querying the other systems).
-    spec_id_offset: integer added to spec_id so that runs concatenated
-                    across multiple invocations do not collide.
-    """
     n_dims = len(DIMENSION_ORDER)
     sampler = LatinHypercube(d=n_dims, seed=seed)
     lhs_samples = sampler.random(n=n_samples)
