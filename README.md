@@ -8,7 +8,7 @@ P-SCA systematically varies six prompt dimensions, **model**, **persona format**
 
 ## Models
 
-GPT-5.4, GPT-5.4-nano, Claude Sonnet 4.6, Claude Haiku 4.5, Llama 3.3 70B, Mistral Small
+GPT-5.4, GPT-5.4-nano, Claude Sonnet 4.6, Llama 3.3 70B, Mistral Small. Gemini 2.5 Flash is queried in the same multiverse design but excluded from primary analyses on parse-rate grounds (see paper §4.1).
 
 ## Setup
 
@@ -45,6 +45,12 @@ python pilot.py bootstrap --output full_lhs.json
 ANES benchmark comparison
 python pilot.py anes --output full_lhs.json
 
+Reproduce Gemini-excluded headline numbers
+python pilot.py analyze --output full_lhs.json --exclude_models gemini-2.5-flash
+
+Derive empirical coverage thresholds (10k permutations)
+python pilot.py threshold --output full_lhs.json --exclude_models gemini-2.5-flash --n_permutations 10000
+
 Saltelli sampling for Sobol indices
 python pilot.py saltelli --items gun_control --output saltelli_gun.json
 
@@ -71,3 +77,7 @@ python ordering_test.py
 | `ordering_test.py` | Position bias test for forced-choice framing |
 | `patch_run.py` | Reruns failed specifications from a previous run |
 | `download_anes.py` | ANES 2024 data download and processing |
+
+## Data and logs
+
+Results files in `results/*.json` are the API call logs. Each record includes the model's raw text reply in the `raw_response` field alongside the parsed `score` and full specification metadata (model, persona, framing, system prompt, temperature, few-shot count, profile, item, repeat).
