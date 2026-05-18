@@ -126,7 +126,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(PALETTE, mo, pd):
     _cold = pd.DataFrame([
         {"framing": "direct",         "Democrat mean": 4.62, "Republican mean": 2.34, "gap (D − R)": "+2.28"},
@@ -351,7 +351,7 @@ def _():
     return ANES_ITEMS, DIMENSIONS, PROFILES, build_prompt
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(ANES_ITEMS, DIMENSIONS, PROFILES, mo):
     model_dd      = mo.ui.dropdown(DIMENSIONS["model"], value="claude-sonnet-4-6", label="model")
     persona_dd    = mo.ui.dropdown(DIMENSIONS["persona_format"], value="narrative", label="persona format")
@@ -377,7 +377,7 @@ def _(ANES_ITEMS, DIMENSIONS, PROFILES, mo):
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     PALETTE,
     PROFILES,
@@ -481,14 +481,14 @@ def _(DIMENSIONS):
     return (generate_specifications,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     n_samples_slider = mo.ui.slider(50, 600, value=300, step=50, label="n specifications")
     mo.hstack([n_samples_slider], justify="center")
     return (n_samples_slider,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(PALETTE, alt, generate_specifications, mo, n_samples_slider, pd):
     _specs = generate_specifications(n_samples=n_samples_slider.value, seed=42)
     _specs_df = pd.DataFrame(_specs)
@@ -532,7 +532,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(DATA_URL, mo, pd):
     try:
         df = pd.read_csv(DATA_URL, compression="gzip")
@@ -555,7 +555,7 @@ def _(DATA_URL, mo, pd):
     return (df,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df, mo):
     df_main = df[df["model"] != "gemini-2.5-flash"].copy()
     mo.md(f"After excluding Gemini: **{len(df_main):,} responses** across **{df_main['spec_id'].nunique()} specifications**.")
@@ -578,7 +578,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(DIMENSIONS, mo):
     pick_model    = mo.ui.dropdown(DIMENSIONS["model"],            value="llama-3.3-70b",     label="model")
     pick_persona  = mo.ui.dropdown(DIMENSIONS["persona_format"],   value="narrative",         label="persona format")
@@ -602,7 +602,7 @@ def _(DIMENSIONS, mo):
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     PALETTE,
     df,
@@ -684,7 +684,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(DIMENSIONS, df_main, mo):
     curve_item_dd = mo.ui.dropdown(
         sorted(df_main["item"].unique()), value="gun_control", label="ANES item"
@@ -722,7 +722,7 @@ def _(DIMENSIONS, df_main, mo):
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     PALETTE,
     alt,
@@ -805,7 +805,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(PALETTE, alt, curve_item_dd, df_main, mo, pd):
     import numpy as _np
 
@@ -884,7 +884,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(PALETTE, alt, df_main, mo, pd):
     _DIMS = ["model", "persona_format", "question_framing",
              "system_prompt", "temperature", "few_shot"]
@@ -956,7 +956,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(PALETTE, alt, df_main, mo, pd):
     _ANES_GAPS = {"gov_spending": 0.86, "immigration": 0.93, "gun_control": 1.18}
     _amp_rows = []
@@ -1026,7 +1026,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(PALETTE, alt, df_main, mo, pd):
     _llama_cell = df_main[(df_main["model"] == "llama-3.3-70b") & (df_main["item"] == "gun_control")]
     _rows = []
